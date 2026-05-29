@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Weekly Activity Matrix — Q2 FY27 · Mark Gorelik + Jihed Feddaoui Teams</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; padding: 8px; min-width: 900px; zoom: 0.70; }
+
+  .page { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+
+  /* HEADER */
+  .header { background: white; border-radius: 10px; padding: 16px 22px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 6px rgba(0,0,0,0.08); border-left: 4px solid #29B5E8; }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-icon { font-size: 22px; }
+  .header-title { font-size: 18px; font-weight: 700; color: #1a1a2e; }
+  .badge { background: #e8f0fe; color: #4a6fd4; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 20px; border: 1px solid #c5d5f8; white-space: nowrap; }
+
+  /* INFO BAR */
+  .infobar { background: #f8f9ff; border: 1px solid #dde4f5; border-radius: 8px; padding: 10px 16px; font-size: 12px; color: #555; display: flex; align-items: flex-start; gap: 8px; }
+  .infobar-icon { color: #4a6fd4; font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .infobar span b { color: #4a6fd4; }
+
+  /* GRID */
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  /* PANEL */
+  .panel { background: white; border-radius: 10px; padding: 14px 16px; box-shadow: 0 1px 6px rgba(0,0,0,0.08); }
+  .panel-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+  .panel-legend { font-size: 11px; color: #777; margin-bottom: 14px; }
+  .panel-legend span { margin-right: 4px; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+  thead th { font-size: 10px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.04em; padding: 0 6px 8px 6px; text-align: center; border-bottom: 1px solid #eee; }
+  thead th.col-name { text-align: left; padding-left: 2px; width: 110px; }
+  thead th.col-total, thead th.col-avg { color: #555; }
+  tbody tr { }
+  tbody tr:hover td { background-color: rgba(0,0,0,0.02) !important; }
+  td.name-cell { font-size: 12px; font-weight: 500; color: #2c2c2c; padding: 5px 4px 5px 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; max-width: 110px; }
+  td.name-cell .new-hire { font-size: 9.5px; color: #e67e22; font-weight: 600; margin-left: 4px; }
+  td.val { width: 50px; height: 34px; text-align: center; vertical-align: middle; font-size: 13px; font-weight: 700; border-radius: 6px; padding: 0 2px; }
+  td.dash { text-align: center; vertical-align: middle; font-size: 16px; color: #ccc; width: 50px; }
+  td.total-cell { text-align: center; vertical-align: middle; font-size: 13px; font-weight: 700; color: #333; padding: 0 6px; border-left: 1px solid #f0f0f0; }
+  td.avg-cell { text-align: right; vertical-align: middle; font-size: 11.5px; font-weight: 600; color: #555; padding: 0 4px 0 6px; white-space: nowrap; }
+  td.avg-red { color: #e74c3c !important; font-weight: 700 !important; }
+  .wk-note { font-size: 10px; color: #999; font-weight: 400; display: block; }
+
+  /* Go-live colors: gray=0, yellow=1-2, green=3+ */
+  .gl-0   { background: #f5f5f5; color: #bbb; }
+  .gl-0p  { background: #fff3cd; color: #b08800; font-size: 10px; font-weight: 600; }
+  .gl-1   { background: #fff3cd; color: #b08800; }
+  .gl-2   { background: #fde68a; color: #92700a; }
+  .gl-3   { background: #86efac; color: #166534; }
+  .gl-5p  { background: #22c55e; color: #fff; }
+  .gl-8p  { background: #15803d; color: #fff; }
+
+  /* Meeting colors: red=0, yellow=1-3, green=4-7, dark=8+ */
+  .mt-pto { background: #fde8e8; color: #c0392b; font-size: 10px; font-weight: 600; }
+  .mt-0   { background: #f5f5f5; color: #bbb; }
+  .mt-1   { background: #fee2e2; color: #b91c1c; }
+  .mt-2   { background: #fecaca; color: #b91c1c; }
+  .mt-3   { background: #fed7aa; color: #9a3412; }
+  .mt-4   { background: #fef08a; color: #713f12; }
+  .mt-5   { background: #d9f99d; color: #3f6212; }
+  .mt-6   { background: #bbf7d0; color: #166534; }
+  .mt-7   { background: #86efac; color: #166534; }
+  .mt-8   { background: #4ade80; color: #14532d; }
+  .mt-9   { background: #22c55e; color: #fff; }
+  .mt-10  { background: #16a34a; color: #fff; }
+  .mt-11p { background: #15803d; color: #fff; }
+
+  /* Win colors: gray=0, indigo=1-2, purple=3+, dark=8+ */
+  .wn-0   { background: #f5f5f5; color: #bbb; }
+  .wn-1   { background: #ede9fe; color: #5b21b6; }
+  .wn-2   { background: #ddd6fe; color: #5b21b6; }
+  .wn-3   { background: #c4b5fd; color: #4c1d95; }
+  .wn-5p  { background: #8b5cf6; color: #fff; }
+  .wn-8p  { background: #7c3aed; color: #fff; }
+  .wn-11p { background: #5b21b6; color: #fff; }
+
+  /* TEAM SECTION HEADER */
+  .team-header { display: flex; align-items: center; gap: 10px; padding: 6px 0 2px 0; }
+  .team-header-label { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+  .team-header-sep { flex: 1; height: 1px; background: #e5e7eb; margin-left: 8px; }
+
+  /* OBSERVATIONS */
+  .obs { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 16px 20px; }
+  .obs-title { font-size: 13px; font-weight: 700; color: #166534; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .obs-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .obs-item b { font-size: 12px; color: #1a1a2e; display: block; margin-bottom: 4px; }
+  .obs-item p { font-size: 11.5px; color: #444; line-height: 1.5; }
+
+  /* FOOTNOTES */
+  .footnote { font-size: 10.5px; color: #999; margin-top: 10px; line-height: 1.6; }
+  .w4-star { color: #e67e22; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <span class="header-icon">📅</span>
+      <span class="header-title">Weekly Activity Matrix — Q2 FY27 (May 1–27) &nbsp;·&nbsp; Mark Gorelik &amp; Jihed Feddaoui Teams</span>
+    </div>
+    <span class="badge">4 Completed Weeks · Live Data</span>
+  </div>
+
+  <!-- INFO BAR -->
+  <div class="infobar">
+    <span class="infobar-icon">ℹ</span>
+    <span>
+      <b>Weeks:</b>&nbsp;
+      <b>W1</b> = May 4–10 &nbsp;·&nbsp;
+      <b>W2</b> = May 11–17 &nbsp;·&nbsp;
+      <b>W3</b> = May 18–24 &nbsp;·&nbsp;
+      <b>W4*</b> = May 25–27 <span style="color:#e67e22">(partial/data lag likely)</span>.
+      Meetings from Salesforce activity tracking. Go-lives from SDA_USE_CASE_VIEW (GO_LIVE_DATE within Q2).
+    </span>
+  </div>
+
+  <!-- MARK GORELIK TEAM LABEL -->
+  <div class="team-header">
+    <span class="team-header-label">👤 Mark Gorelik — Senior Commercial Sales Manager</span>
+    <div class="team-header-sep"></div>
+  </div>
+
+  <!-- DUAL HEATMAP GRID -->
+  <div class="grid">
+
+    <!-- MARK MEETINGS PANEL -->
+    <div class="panel">
+      <div class="panel-title" style="color:#2980b9">🤝 Customer Meetings per Week</div>
+      <div class="panel-legend">— 0=red &nbsp;·&nbsp; 1–3=yellow &nbsp;·&nbsp; 4–7=green &nbsp;·&nbsp; 8+=dark green</div>
+      <table>
+        <thead>
+          <tr>
+            <th class="col-name">AE</th>
+            <th>W1<br><span style="font-weight:400">5/4</span></th>
+            <th>W2<br><span style="font-weight:400">5/11</span></th>
+            <th>W3<br><span style="font-weight:400">5/18</span></th>
+            <th>W4*<br><span style="font-weight:400">5/25</span></th>
+            <th class="col-total">TOTAL</th>
+            <th class="col-avg">AVG/WK</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name-cell">Aleksandra Nalewajek</td>
+            <td class="val mt-2">2</td><td class="val mt-1">1</td><td class="val mt-2">2</td><td class="val mt-2">2</td>
+            <td class="total-cell">7</td><td class="avg-cell">1.75/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Anja Sobbe</td>
+            <td class="val mt-2">2</td><td class="val mt-6">6</td><td class="val mt-2">2</td><td class="val mt-1">1</td>
+            <td class="total-cell">11</td><td class="avg-cell">2.75/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Dieuwertje Oudelaar</td>
+            <td class="val mt-3">3</td><td class="val mt-7">7</td><td class="val mt-7">7</td><td class="val mt-5">5</td>
+            <td class="total-cell">22</td><td class="avg-cell">5.5/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Emre Soganci</td>
+            <td class="val mt-6">6</td><td class="val mt-4">4</td><td class="val mt-pto">PTO?</td><td class="val mt-7">7</td>
+            <td class="total-cell">17</td><td class="avg-cell">5.7/wk <span class="wk-note">(3 wks)</span></td>
+          </tr>
+          <tr>
+            <td class="name-cell">Jie Shen <span class="new-hire">new hire</span></td>
+            <td class="dash">—</td><td class="val mt-2">2</td><td class="val mt-2">2</td><td class="val mt-3">3</td>
+            <td class="total-cell">7</td><td class="avg-cell">2.3/wk <span class="wk-note">(3 wks)</span></td>
+          </tr>
+          <tr>
+            <td class="name-cell">Michael Fladerer</td>
+            <td class="val mt-6">6</td><td class="val mt-9">9</td><td class="val mt-7">7</td><td class="val mt-3">3</td>
+            <td class="total-cell">25</td><td class="avg-cell">6.25/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Nicolas Kaulfuss</td>
+            <td class="val mt-5">5</td><td class="val mt-2">2</td><td class="val mt-7">7</td><td class="dash">—</td>
+            <td class="total-cell">14</td><td class="avg-cell">4.7/wk <span class="wk-note">(3 wks)</span></td>
+          </tr>
+          <tr>
+            <td class="name-cell">Sebastian Klausen</td>
+            <td class="val mt-4">4</td><td class="val mt-3">3</td><td class="val mt-6">6</td><td class="dash">—</td>
+            <td class="total-cell">13</td><td class="avg-cell">4.3/wk <span class="wk-note">(3 wks)</span></td>
+          </tr>
+          <tr>
+            <td class="name-cell">Shachar Aviv</td>
+            <td class="val mt-10">10</td><td class="val mt-10">10</td><td class="val mt-11p">11</td><td class="val mt-7">7</td>
+            <td class="total-cell">38</td><td class="avg-cell">9.5/wk</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="footnote">Source: Salesforce activity (meeting type). W4 blanks = data lag for partial week. "PTO?" = 0 meetings logged that week.</div>
+    </div>
+
+    <!-- MARK GO-LIVES PANEL -->
+    <div class="panel">
+      <div class="panel-title" style="color:#e67e22">🚀 Use Cases Created per Week</div>
+      <div class="panel-legend">— 0=gray &nbsp;·&nbsp; 1–2=yellow &nbsp;·&nbsp; 3–4=light green &nbsp;·&nbsp; 5+=dark green</div>
+      <table>
+        <thead>
+          <tr>
+            <th class="col-name">AE</th>
+            <th>W1<br><span style="font-weight:400">5/4</span></th>
+            <th>W2<br><span style="font-weight:400">5/11</span></th>
+            <th>W3<br><span style="font-weight:400">5/18</span></th>
+            <th>W4*<br><span style="font-weight:400">5/25</span></th>
+            <th class="col-total">TOTAL</th>
+            <th class="col-avg">AVG/WK</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name-cell">Aleksandra Nalewajek</td>
+            <td class="val gl-0">0</td><td class="val gl-0">0</td><td class="val gl-3">3</td><td class="val gl-0">0</td>
+            <td class="total-cell">3</td><td class="avg-cell">0.75/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Anja Sobbe</td>
+            <td class="val gl-1">1</td><td class="val gl-0">0</td><td class="val gl-0">0</td><td class="val gl-0">0</td>
+            <td class="total-cell">1</td><td class="avg-cell">0.25/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Dieuwertje Oudelaar</td>
+            <td class="val gl-0">0</td><td class="val gl-2">2</td><td class="val gl-0">0</td><td class="val gl-5p">5</td>
+            <td class="total-cell">7</td><td class="avg-cell">1.75/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Emre Soganci</td>
+            <td class="val gl-1">1</td><td class="val gl-0">0</td><td class="val gl-0">0</td><td class="val gl-1">1</td>
+            <td class="total-cell">2</td><td class="avg-cell">0.5/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Jie Shen <span class="new-hire">new hire</span></td>
+            <td class="dash">—</td><td class="val gl-1">1</td><td class="val gl-0">0</td><td class="val gl-0">0</td>
+            <td class="total-cell">1</td><td class="avg-cell">0.33/wk <span class="wk-note">(3 wks)</span></td>
+          </tr>
+          <tr>
+            <td class="name-cell">Michael Fladerer</td>
+            <td class="val gl-0">0</td><td class="val gl-0">0</td><td class="val gl-0">0</td><td class="val gl-0">0</td>
+            <td class="total-cell">0</td><td class="avg-cell avg-red">0/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Nicolas Kaulfuss</td>
+            <td class="val gl-1">1</td><td class="val gl-0">0</td><td class="val gl-1">1</td><td class="val gl-3">3</td>
+            <td class="total-cell">5</td><td class="avg-cell">1.25/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Sebastian Klausen</td>
+            <td class="val gl-8p">8</td><td class="val gl-0">0</td><td class="val gl-1">1</td><td class="val gl-1">1</td>
+            <td class="total-cell">10</td><td class="avg-cell">2.5/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Shachar Aviv</td>
+            <td class="val gl-0">0</td><td class="val gl-3">3</td><td class="val gl-3">3</td><td class="val gl-5p">5</td>
+            <td class="total-cell">11</td><td class="avg-cell">2.75/wk</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="footnote">W4 is partial (3 days of data). Go-lives linked to AE owner via USE_CASE_VIEW.OWNER_EMAIL.</div>
+    </div>
+
+    <!-- MARK WINS PANEL -->
+    <div class="panel">
+      <div class="panel-title" style="color:#7c3aed">🏆 UC Wins per Week</div>
+      <div class="panel-legend">— 0=gray &nbsp;·&nbsp; 1–2=light purple &nbsp;·&nbsp; 3–4=purple &nbsp;·&nbsp; 5+=dark purple</div>
+      <table>
+        <thead>
+          <tr>
+            <th class="col-name">AE</th>
+            <th>W1<br><span style="font-weight:400">5/4</span></th>
+            <th>W2<br><span style="font-weight:400">5/11</span></th>
+            <th>W3<br><span style="font-weight:400">5/18</span></th>
+            <th>W4*<br><span style="font-weight:400">5/25</span></th>
+            <th class="col-total">TOTAL</th>
+            <th class="col-avg">AVG/WK</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name-cell">Aleksandra Nalewajek</td>
+            <td class="val wn-0">0</td><td class="val wn-1">1</td><td class="val wn-1">1</td><td class="val wn-0">0</td>
+            <td class="total-cell">2</td><td class="avg-cell">0.5/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Anja Sobbe</td>
+            <td class="val wn-1">1</td><td class="val wn-1">1</td><td class="val wn-0">0</td><td class="val wn-2">2</td>
+            <td class="total-cell">4</td><td class="avg-cell">1.0/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Dieuwertje Oudelaar</td>
+            <td class="val wn-0">0</td><td class="val wn-5p">5</td><td class="val wn-0">0</td><td class="val wn-8p">7</td>
+            <td class="total-cell">12</td><td class="avg-cell">3.0/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Emre Soganci</td>
+            <td class="val wn-1">1</td><td class="val wn-1">1</td><td class="val wn-0">0</td><td class="val wn-2">2</td>
+            <td class="total-cell">4</td><td class="avg-cell">1.0/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Jie Shen <span class="new-hire">new hire</span></td>
+            <td class="dash">—</td><td class="val wn-1">1</td><td class="val wn-0">0</td><td class="val wn-1">1</td>
+            <td class="total-cell">2</td><td class="avg-cell">0.67/wk <span class="wk-note">(3 wks)</span></td>
+          </tr>
+          <tr>
+            <td class="name-cell">Michael Fladerer</td>
+            <td class="val wn-0">0</td><td class="val wn-1">1</td><td class="val wn-0">0</td><td class="val wn-1">1</td>
+            <td class="total-cell">2</td><td class="avg-cell">0.5/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Nicolas Kaulfuss</td>
+            <td class="val wn-0">0</td><td class="val wn-0">0</td><td class="val wn-1">1</td><td class="val wn-0">0</td>
+            <td class="total-cell">1</td><td class="avg-cell">0.25/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Sebastian Klausen</td>
+            <td class="val wn-11p">11</td><td class="val wn-0">0</td><td class="val wn-1">1</td><td class="val wn-8p">8</td>
+            <td class="total-cell">20</td><td class="avg-cell">5.0/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Shachar Aviv</td>
+            <td class="val wn-1">1</td><td class="val wn-3">3</td><td class="val wn-0">0</td><td class="val wn-5p">5</td>
+            <td class="total-cell">9</td><td class="avg-cell">2.25/wk</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="footnote">UC wins = TECHNICAL_WIN = 'Yes' in SDA_USE_CASE_VIEW, grouped by TECHNICAL_WIN_DATE.</div>
+    </div>
+  </div>
+
+  <!-- JIHED FEDDAOUI TEAM LABEL -->
+  <div class="team-header">
+    <span class="team-header-label">👤 Jihed Alya Feddaoui — Commercial Sales Manager</span>
+    <div class="team-header-sep"></div>
+  </div>
+
+  <!-- JIHED DUAL HEATMAP GRID -->
+  <div class="grid">
+
+    <!-- JIHED MEETINGS PANEL -->
+    <div class="panel">
+      <div class="panel-title" style="color:#2980b9">🤝 Customer Meetings per Week</div>
+      <div class="panel-legend">— 0=red &nbsp;·&nbsp; 1–3=yellow &nbsp;·&nbsp; 4–7=green &nbsp;·&nbsp; 8+=dark green</div>
+      <table>
+        <thead>
+          <tr>
+            <th class="col-name">AE</th>
+            <th>W1<br><span style="font-weight:400">5/4</span></th>
+            <th>W2<br><span style="font-weight:400">5/11</span></th>
+            <th>W3<br><span style="font-weight:400">5/18</span></th>
+            <th>W4*<br><span style="font-weight:400">5/25</span></th>
+            <th class="col-total">TOTAL</th>
+            <th class="col-avg">AVG/WK</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name-cell">Adrien Autones</td>
+            <td class="val mt-5">5</td><td class="val mt-6">6</td><td class="val mt-6">6</td><td class="val mt-2">2</td>
+            <td class="total-cell">19</td><td class="avg-cell">4.75/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Ali Lahmoum</td>
+            <td class="val mt-4">4</td><td class="val mt-9">9</td><td class="val mt-9">9</td><td class="val mt-2">2</td>
+            <td class="total-cell">24</td><td class="avg-cell">6.0/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Emilien Hamet</td>
+            <td class="val mt-5">5</td><td class="val mt-8">8</td><td class="val mt-8">8</td><td class="val mt-3">3</td>
+            <td class="total-cell">24</td><td class="avg-cell">6.0/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Júlia Lucas Ruiz</td>
+            <td class="val mt-0">0</td><td class="val mt-0">0</td><td class="val mt-0">0</td><td class="val mt-0">0</td>
+            <td class="total-cell">0</td><td class="avg-cell avg-red">0/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Lucas Gracia Tressol</td>
+            <td class="val mt-11p">11</td><td class="val mt-9">9</td><td class="val mt-5">5</td><td class="val mt-4">4</td>
+            <td class="total-cell">29</td><td class="avg-cell">7.25/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Silvia Fernandez</td>
+            <td class="val mt-3">3</td><td class="val mt-4">4</td><td class="val mt-5">5</td><td class="val mt-8">8</td>
+            <td class="total-cell">20</td><td class="avg-cell">5.0/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Sofiene Bitari</td>
+            <td class="val mt-pto">PTO?</td><td class="val mt-7">7</td><td class="val mt-2">2</td><td class="val mt-2">2</td>
+            <td class="total-cell">11</td><td class="avg-cell">3.67/wk <span class="wk-note">(3 wks)</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="footnote">Source: Salesforce activity (meeting type). W4 blanks = data lag. "PTO?" = 0 meetings logged. Júlia Lucas Ruiz: 0 meetings may indicate name-matching issue in SF.</div>
+    </div>
+
+    <!-- JIHED GO-LIVES PANEL -->
+    <div class="panel">
+      <div class="panel-title" style="color:#e67e22">🚀 Use Cases Created per Week</div>
+      <div class="panel-legend">— 0=gray &nbsp;·&nbsp; 1–2=yellow &nbsp;·&nbsp; 3–4=light green &nbsp;·&nbsp; 5+=dark green</div>
+      <table>
+        <thead>
+          <tr>
+            <th class="col-name">AE</th>
+            <th>W1<br><span style="font-weight:400">5/4</span></th>
+            <th>W2<br><span style="font-weight:400">5/11</span></th>
+            <th>W3<br><span style="font-weight:400">5/18</span></th>
+            <th>W4*<br><span style="font-weight:400">5/25</span></th>
+            <th class="col-total">TOTAL</th>
+            <th class="col-avg">AVG/WK</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name-cell">Adrien Autones</td>
+            <td class="val gl-2">2</td><td class="val gl-3">3</td><td class="val gl-2">2</td><td class="val gl-0">0</td>
+            <td class="total-cell">7</td><td class="avg-cell">1.75/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Ali Lahmoum</td>
+            <td class="val gl-0">0</td><td class="val gl-0">0</td><td class="val gl-3">4</td><td class="val gl-0">0</td>
+            <td class="total-cell">4</td><td class="avg-cell">1.0/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Emilien Hamet</td>
+            <td class="val gl-0">0</td><td class="val gl-2">2</td><td class="val gl-8p">6</td><td class="val gl-0">0</td>
+            <td class="total-cell">8</td><td class="avg-cell">2.0/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Júlia Lucas Ruiz</td>
+            <td class="val gl-0">0</td><td class="val gl-1">1</td><td class="val gl-2">2</td><td class="val gl-1">1</td>
+            <td class="total-cell">4</td><td class="avg-cell">1.0/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Lucas Gracia Tressol</td>
+            <td class="val gl-0">0</td><td class="val gl-0">0</td><td class="val gl-0">0</td><td class="val gl-8p">6</td>
+            <td class="total-cell">6</td><td class="avg-cell">1.5/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Silvia Fernandez</td>
+            <td class="val gl-0">0</td><td class="val gl-2">2</td><td class="val gl-3">4</td><td class="val gl-3">3</td>
+            <td class="total-cell">9</td><td class="avg-cell">2.25/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Sofiene Bitari</td>
+            <td class="val gl-0">0</td><td class="val gl-1">1</td><td class="val gl-0">0</td><td class="val gl-0">0</td>
+            <td class="total-cell">1</td><td class="avg-cell">0.25/wk</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="footnote">W4 is partial (3 days of data). Go-lives linked to AE owner via USE_CASE_VIEW.OWNER_EMAIL.</div>
+    </div>
+
+    <!-- JIHED WINS PANEL -->
+    <div class="panel">
+      <div class="panel-title" style="color:#7c3aed">🏆 UC Wins per Week</div>
+      <div class="panel-legend">— 0=gray &nbsp;·&nbsp; 1–2=light purple &nbsp;·&nbsp; 3–4=purple &nbsp;·&nbsp; 5+=dark purple</div>
+      <table>
+        <thead>
+          <tr>
+            <th class="col-name">AE</th>
+            <th>W1<br><span style="font-weight:400">5/4</span></th>
+            <th>W2<br><span style="font-weight:400">5/11</span></th>
+            <th>W3<br><span style="font-weight:400">5/18</span></th>
+            <th>W4*<br><span style="font-weight:400">5/25</span></th>
+            <th class="col-total">TOTAL</th>
+            <th class="col-avg">AVG/WK</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name-cell">Adrien Autones</td>
+            <td class="val wn-0">0</td><td class="val wn-3">4</td><td class="val wn-2">2</td><td class="val wn-0">0</td>
+            <td class="total-cell">6</td><td class="avg-cell">1.5/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Ali Lahmoum</td>
+            <td class="val wn-1">1</td><td class="val wn-8p">8</td><td class="val wn-3">3</td><td class="val wn-0">0</td>
+            <td class="total-cell">12</td><td class="avg-cell">3.0/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Emilien Hamet</td>
+            <td class="val wn-0">0</td><td class="val wn-1">1</td><td class="val wn-0">0</td><td class="val wn-3">3</td>
+            <td class="total-cell">4</td><td class="avg-cell">1.0/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Júlia Lucas Ruiz</td>
+            <td class="val wn-1">1</td><td class="val wn-1">1</td><td class="val wn-1">1</td><td class="val wn-3">3</td>
+            <td class="total-cell">6</td><td class="avg-cell">1.5/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Lucas Gracia Tressol</td>
+            <td class="val wn-0">0</td><td class="val wn-2">2</td><td class="val wn-3">3</td><td class="val wn-2">2</td>
+            <td class="total-cell">7</td><td class="avg-cell">1.75/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Silvia Fernandez</td>
+            <td class="val wn-1">1</td><td class="val wn-0">0</td><td class="val wn-1">1</td><td class="val wn-8p">8</td>
+            <td class="total-cell">10</td><td class="avg-cell">2.5/wk</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Sofiene Bitari</td>
+            <td class="val wn-1">1</td><td class="val wn-1">1</td><td class="val wn-0">0</td><td class="val wn-0">0</td>
+            <td class="total-cell">2</td><td class="avg-cell">0.5/wk</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="footnote">UC wins = TECHNICAL_WIN = 'Yes' in SDA_USE_CASE_VIEW, grouped by TECHNICAL_WIN_DATE.</div>
+    </div>
+  </div>
+
+  <!-- KEY OBSERVATIONS -->
+  <div class="obs">
+    <div class="obs-title">📊 Key Observations — Both Teams, Q2 FY27</div>
+    <div class="obs-grid">
+      <div class="obs-item">
+        <b>Mark's Team — Top Performers:</b>
+        <p>Shachar (9.5 mtgs/wk, 11 go-lives) leads both metrics. Sebastian's W1 burst of 8 go-lives is exceptional. Michael (6.25 mtgs/wk, 0 go-lives) has high activity not yet converting — worth coaching on deal progression.</p>
+      </div>
+      <div class="obs-item">
+        <b>Jihed's Team — Strong Pipeline Execution:</b>
+        <p>Lucas (7.25 mtgs/wk), Ali &amp; Emilien (6/wk each) show healthy meeting cadence. Silvia has the most go-lives (9) with growing activity (W4 = 8 mtgs). Lucas drove 6 go-lives in W4 alone.</p>
+      </div>
+      <div class="obs-item">
+        <b>Flags to Watch:</b>
+        <p>Júlia Lucas Ruiz shows 0 meetings — likely a Salesforce name-matching issue rather than true inactivity. Sofiene was on PTO in W1. Aleksandra (Mark's team) remains low-activity at 1.75 mtgs/wk despite 3 go-lives in W3.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
