@@ -1,12 +1,12 @@
 ---
 name: weekly-activity-update
-description: "Refresh the Weekly Activity Matrix dashboard for Mark Gorelik and Jihed Feddaoui's teams. Queries Snowflake for the latest go-lives (use cases created) and customer meetings per week, then rewrites the HTML heatmap file. Use when: weekly activity matrix, weekly update dashboard, refresh activity heatmap, update go-lives and meetings. Triggers: weekly activity update, activity matrix, refresh the dashboard, update the heatmap."
+description: "Refresh the Weekly Activity Matrix dashboard for Mark Gorelik and Jihed Feddaoui's teams. Queries Snowflake for the latest go-lives (use cases created), customer meetings, and UC wins per week, then rewrites the HTML heatmap file. Use when: weekly activity matrix, weekly update dashboard, refresh activity heatmap, update go-lives and meetings. Triggers: weekly activity update, activity matrix, refresh the dashboard, update the heatmap."
 ---
 
 # Weekly Activity Matrix — Update Skill
 
 Refreshes `/Users/dwilbrink/.snowflake/cortex/playground/workspace/weekly_activity_matrix.html`
-with fresh go-live and meeting counts for both teams.
+with fresh go-live, meeting, and UC win counts for both teams.
 
 ## Config
 
@@ -95,7 +95,30 @@ GROUP BY week_start, a.OWNER
 ORDER BY week_start, meetings DESC;
 ```
 
-### Step 4: Fetch Team Rosters
+### Step 4: Query UC Wins
+
+Run for **each manager** (Mark + Jihed):
+
+```sql
+SELECT
+    DATE_TRUNC('week', uc.TECHNICAL_WIN_DATE) AS week_start,
+    e.EMPLOYEE_NAME AS ae_name,
+    COUNT(*) AS wins
+FROM SALES.RAVEN.SDA_USE_CASE_VIEW uc
+JOIN SALES.RAVEN.RAVEN_EMPLOYEE_WITH_REPORTING_CHAIN e
+    ON UPPER(uc.OWNER_EMAIL) = UPPER(e.PRIMARY_WORK_EMAIL)
+WHERE uc.TECHNICAL_WIN_DATE >= '2026-05-04'
+  AND uc.TECHNICAL_WIN_DATE <= CURRENT_DATE()
+  AND uc.TECHNICAL_WIN = 'Yes'
+  AND UPPER(e.MANAGER_EMAIL) = UPPER('<MANAGER_EMAIL>')
+  AND e.IS_ACTIVE = TRUE
+GROUP BY week_start, e.EMPLOYEE_NAME
+ORDER BY week_start, wins DESC;
+```
+
+AEs with zero wins across all weeks will not appear — include them in the table with 0s in every cell.
+
+### Step 5: Fetch Team Rosters
 
 Query both rosters to get the complete AE list (in case an AE has zero activity in all weeks and won't appear in the aggregated results):
 
@@ -107,7 +130,7 @@ WHERE UPPER(MANAGER_EMAIL) = UPPER('<MANAGER_EMAIL>')
 ORDER BY EMPLOYEE_NAME;
 ```
 
-### Step 5: Build the Per-AE Data Tables
+### Step 6: Build the Per-AE Data Tables
 
 For each AE on each team, pivot the query results into a per-week grid:
 - Weeks with no data = 0.
@@ -144,9 +167,23 @@ For each AE on each team, pivot the query results into a per-week grid:
 | 10 | `mt-10` |
 | 11+ | `mt-11p` |
 
-Sort each panel: go-lives panel by total desc; meetings panel by avg/wk desc.
+**Color classes for UC wins:**
 
-### Step 6: Add New Week Columns if Needed
+| Value | Class |
+|-------|-------|
+| 0 | `wn-0` |
+| 1 | `wn-1` |
+| 2 | `wn-2` |
+| 3–4 | `wn-3` |
+| 5–7 | `wn-5p` |
+| 8–10 | `wn-8p` |
+| 11+ | `wn-11p` |
+
+Sort wins panel by total desc.
+
+Sort each panel: go-lives panel by total desc; meetings panel by avg/wk desc; wins panel by total desc.
+
+### Step 7: Add New Week Columns if Needed
 
 If weeks have passed since the last run:
 - Add new `<th>` columns for the new week(s) in both panels of both teams.
@@ -154,7 +191,7 @@ If weeks have passed since the last run:
 - Update the dashboard header date range.
 - Update the info bar week list.
 
-### Step 7: Rewrite the HTML File
+### Step 8: Rewrite the HTML File
 
 Update the existing file at the configured output path. Do NOT recreate the full file from scratch — use targeted edits to replace only the table `<tbody>` content and headers.
 
@@ -165,9 +202,11 @@ Key sections to update:
 4. Mark's meetings `<tbody>` — replace all `<tr>` rows
 5. Jihed's go-lives `<tbody>` — replace all `<tr>` rows
 6. Jihed's meetings `<tbody>` — replace all `<tr>` rows
-7. Key Observations — update bullets with fresh highlights
+7. Mark's wins `<tbody>` — replace all `<tr>` rows
+8. Jihed's wins `<tbody>` — replace all `<tr>` rows
+9. Key Observations — update bullets with fresh highlights
 
-### Step 8: Open and Verify
+### Step 9: Open and Verify
 
 Open the file in the browser:
 ```
